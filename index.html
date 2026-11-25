@@ -280,6 +280,50 @@ h1,h2,h3{margin:0;font-weight:600}
 .streak{display:inline-block;margin:0 auto;background:var(--hi);color:var(--ink);border:2px solid var(--ink);border-radius:99px;padding:6px 16px;font:600 18px/1.3 var(--ui);animation:bump .6s ease-out}
 .pv.ok .bigico,.pv.turn .bigico{animation:popin .5s cubic-bezier(.2,.9,.3,1.4)}
 @keyframes popin{from{transform:scale(.3);opacity:0}}
+
+/* result: team member breakdown, fits one screen */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.tpanel{background:var(--card);border:2px solid var(--ink);border-top:8px solid var(--c);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.tph{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.tpn{font:600 18px/1.25 var(--ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tph .gv{font:400 30px/1 var(--mark);white-space:nowrap}
+.tpanel .strack{height:14px;border-left-width:2px}
+.tpanel .strack i{border-width:2px;border-radius:0 6px 6px 0}
+.tpm{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;font-size:15px}
+.tpm li{display:flex;justify-content:space-between;gap:8px}
+.tpm li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpm li b{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tpm li.w b{color:var(--bad)}
+.tpm li.n b{color:var(--mute);font-weight:500}
+.tpanel small{color:var(--soft);font-size:13px}
+.qwrap.res{gap:12px;padding-top:clamp(12px,1.8vw,22px)}
+.qwrap.res .qcard{padding:14px 22px;gap:10px;box-shadow:5px 5px 0 var(--ink);border-radius:18px}
+.qwrap.res .qtext{font-size:clamp(20px,2vw,30px)}
+.qwrap.res .facts span{font-size:16px;padding:2px 10px}
+.qwrap.res .flabel{display:none}
+.qwrap.res .qcard table{font-size:16px}
+.qwrap.res .qcard th,.qwrap.res .qcard td{padding:4px 12px}
+.qwrap.res .hch{gap:10px}
+.qwrap.res .ch{min-height:56px;padding:6px 16px;box-shadow:3px 3px 0 var(--ink)}
+.qwrap.res .ch.dim{box-shadow:none}
+.qwrap.res .ch .ct{font-size:clamp(17px,1.7vw,24px)}
+.qwrap.res .ch .cn{font-size:clamp(20px,2vw,28px)}
+.qwrap.res .ch .ch-shape{width:28px;height:28px}
+.qwrap.res .ans{padding:10px 18px}
+.qwrap.res .ans b{font-size:clamp(19px,1.9vw,26px)}
+.qwrap.res .ans p{font-size:16px}
+.qwrap.res .gainbox{padding:10px 14px}
+.gainbox .tgrid{margin-top:8px}
+/* phone: teammates list */
+.tlist{background:rgba(255,255,255,.96);color:var(--ink);border:2px solid var(--ink);border-radius:14px;padding:10px 14px;text-align:left;max-width:380px;width:100%;margin:0 auto}
+.tlist p{color:var(--soft)!important;font-size:14px!important;margin:0 0 4px!important}
+.tlist ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.tlist li{display:flex;justify-content:space-between;gap:10px;font:500 16px/1.45 var(--ui)}
+.tlist li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlist li b{font-weight:700;white-space:nowrap}
+.tlist li.me{background:var(--hi);border-radius:6px;padding:0 6px;margin:0 -6px}
+.tlist li.w b{color:var(--bad)}
+.tlist li.n b{color:var(--mute);font-weight:500}
 @media(max-width:900px){.lobby{grid-template-columns:1fr}.qrcard{max-width:440px;margin:0 auto;width:100%}}
 @media(max-width:720px){.board{grid-template-columns:1fr}.col{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:auto}.head{grid-column:1/-1;min-height:0;place-items:center start}.tile{min-height:64px;font-size:32px}.hch{grid-template-columns:1fr}.order li+li::before{display:none}.tside{margin-left:0}.srow,.grow{grid-template-columns:minmax(70px,110px) minmax(0,1fr) 5ch}.grow small{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -371,8 +415,8 @@ h1,h2,h3{margin:0;font-weight:600}
     </div>
     <div class="ans" id="ans" hidden><span class="tagq">เฉลย</span><div><b id="atext"></b><p id="aexp"></p></div></div>
     <div id="resblock" class="gainbox" hidden>
-      <div class="resfoot"><h2>คะแนนที่แต่ละทีมได้ข้อนี้</h2><button class="go big" id="tonext">กลับไปที่กระดาน</button></div>
-      <div id="gains" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="resfoot"><h2>คะแนนข้อนี้ของแต่ละทีมและแต่ละคน</h2><button class="go big" id="tonext">กลับไปที่กระดาน</button></div>
+      <div id="gains" class="tgrid"></div>
     </div>
   </div>
 </div>
@@ -2826,7 +2870,7 @@ function confetti(n,mode){
   const cv=$('confetti');if(!cv||RM.matches)return;
   const ctx=cv.getContext('2d'),W=cv.width=innerWidth,H=cv.height=innerHeight,cols=[...TCOL,'#2457E6','#E5383B'],ps=[];
   for(let i=0;i<n;i++){const rain=mode==='rain';
-    ps.push({x:rain?Math.random()*W:W*(.25+.5*Math.random()),y:rain?-20-Math.random()*H*.6:H*.62,vx:rain?(Math.random()-.5)*2:(Math.random()-.5)*16,vy:rain?2+Math.random()*3:-(9+Math.random()*13),r:5+Math.random()*6,c:cols[i%cols.length],a:Math.random()*6,va:(Math.random()-.5)*.3,k:i%3})}
+    const L=i%2===0;ps.push({x:rain?Math.random()*W:(L?-10:W+10),y:rain?-20-Math.random()*H*.6:H*(.75+Math.random()*.2),vx:rain?(Math.random()-.5)*2:(L?1:-1)*(2+Math.random()*4),vy:rain?2+Math.random()*3:-(13+Math.random()*10),r:5+Math.random()*6,c:cols[i%cols.length],a:Math.random()*6,va:(Math.random()-.5)*.3,k:i%3})}
   cancelAnimationFrame(cfRaf);const t0=performance.now();let last=t0;
   const step=now=>{const dt=Math.min(32,now-last)/16;last=now;ctx.clearRect(0,0,W,H);let alive=0;
     for(const p of ps){p.vy+=(mode==='rain'?.05:.38)*dt;p.vx*=.99;p.x+=p.vx*dt;p.y+=p.vy*dt;p.a+=p.va*dt;
@@ -2946,7 +2990,7 @@ function runHost(){
       m.q={k:Q.k,cat:Q.cat,pts:Q.p,picker:Q.team,texts:Q.texts};
       if(G.phase==='read'){m.q.remain=Math.max(0,Q.readEnd-now);m.q.total=G.read*1000}
       if(G.phase==='answer'){m.q.remain=Math.max(0,Q.end-now);m.q.total=G.secs*1000;const a=Q.answers[pid];m.q.mine=a?a.c:null}
-      if(G.phase==='result'){const a=Q.answers[pid];m.res={correct:Q.correct,mine:a?a.c:null,pts:a?a.pts:0,gain:p&&p.team!=null?Q.gains[p.team]:0,streak:p?p.streak||0:0}}
+      if(G.phase==='result'){const a=Q.answers[pid];m.res={correct:Q.correct,mine:a?a.c:null,pts:a?a.pts:0,gain:p&&p.team!=null?Q.gains[p.team]:0,streak:p?p.streak||0:0,mates:p&&p.team!=null&&Q.members?(Q.members[p.team]||[]).slice(0,20).map(m=>({n:m.n,pts:m.pts,st:m.st,me:m.id===pid})):[]}}
     }
     return m;
   }
@@ -3079,7 +3123,7 @@ function runHost(){
     if(q.f){const l=document.createElement('p');l.className='flabel';l.textContent='ข้อมูลที่โจทย์ให้';const d=document.createElement('div');d.className='facts';q.f.forEach(x=>{const s=document.createElement('span');s.textContent=x;d.appendChild(s)});fx.append(l,d)}
     $('qtable').innerHTML=q.t?tableHTML(q.t):'';$('qtable').hidden=!q.t;
     $('atext').textContent=q.c[0];$('aexp').textContent=q.e;
-    $('intro').hidden=false;$('qmain').hidden=true;
+    $('intro').hidden=false;$('qmain').hidden=true;$('qmain').classList.remove('res');
     const bar=$('ibar');bar.style.animation='none';void bar.offsetWidth;bar.style.animation=`drain ${G.read}s linear forwards`;
     clearInterval(tick);tick=setInterval(()=>{const left=Math.ceil((Q.readEnd-performance.now())/1000);if(left>0)$('icount').textContent=left},200);
     $('icount').textContent=G.read;
@@ -3141,11 +3185,14 @@ function runHost(){
     if(!Q||G.phase!=='answer')return;
     clearInterval(tick);try{if(endOsc&&performance.now()<Q.end-50)endOsc.stop()}catch(e){}endOsc=null;
     $('timer').classList.remove('hurry');if(performance.now()>=Q.end-50)$('timer').classList.add('up');
+    Q.members=[];
     for(let t=0;t<G.nT;t++){
       const members=new Set([...Q.eligible.filter(id=>G.players[id]&&G.players[id].team===t),...Object.keys(Q.answers).filter(id=>Q.answers[id].team===t)]);
       let sum=0;members.forEach(id=>{if(Q.answers[id])sum+=Q.answers[id].pts});
       Q.gains[t]=members.size?Math.round(sum/members.size):0;
       G.scores[t]+=Q.gains[t];
+      Q.members[t]=[...members].filter(id=>G.players[id]).map(id=>{const a=Q.answers[id];return {id,n:G.players[id].name,pts:a?a.pts:0,st:a?(a.right?'r':'w'):'n'}})
+        .sort((x,y)=>y.pts-x.pts||('rwn'.indexOf(x.st)-'rwn'.indexOf(y.st)));
     }
     for(const id in Q.answers){const p=G.players[id];if(p)p.score+=Q.answers[id].pts}
     new Set([...Q.eligible,...Object.keys(Q.answers)]).forEach(id=>{const p=G.players[id];if(!p)return;const a=Q.answers[id];p.streak=a&&a.right?(p.streak||0)+1:0});
@@ -3154,9 +3201,21 @@ function runHost(){
     G.phase='result';G.started=true;
     drawChoices(true);
     $('qbar').hidden=true;$('ans').hidden=false;$('resblock').hidden=false;
+    $('qmain').classList.add('res');
     const gb=$('gains');gb.innerHTML='';
-    for(let t=0;t<G.nT;t++){const r=barRow(t,G.names[t],'',Q.gains[t],Q.gains[t]/Q.p*100,'grow');
-      const v=document.createElement('b');v.className='gv';v.textContent='+'+Q.gains[t];const sm=document.createElement('small');sm.textContent='รวม '+G.scores[t];r.append(v,sm);gb.appendChild(r)}
+    for(let t=0;t<G.nT;t++){
+      const d=document.createElement('div');d.className='tpanel';d.style.setProperty('--c',TCOL[t]);
+      const hd=document.createElement('div');hd.className='tph';const nm=document.createElement('span');nm.className='tpn';nm.textContent=G.names[t];
+      const gv=document.createElement('b');gv.className='gv';gv.textContent='+'+Q.gains[t];hd.append(nm,gv);
+      const tr=document.createElement('div');tr.className='strack';const bar=document.createElement('i');bar.style.width='0%';tr.appendChild(bar);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.width=(Q.gains[t]/Q.p*100)+'%'}));
+      const ol=document.createElement('ol');ol.className='tpm';const MAXM=10,ms=Q.members[t]||[];
+      ms.slice(0,MAXM).forEach(m=>{const li=document.createElement('li');li.className=m.st;const a=document.createElement('span');a.textContent=m.n;const b=document.createElement('b');b.textContent=m.st==='r'?'+'+m.pts:m.st==='w'?'ผิด 0':'ไม่ได้ตอบ';li.append(a,b);ol.appendChild(li)});
+      if(ms.length>MAXM){const li=document.createElement('li');li.className='n';const a=document.createElement('span');a.textContent='อีก '+(ms.length-MAXM)+' คน';li.appendChild(a);ol.appendChild(li)}
+      if(!ms.length){const li=document.createElement('li');li.className='n';const a=document.createElement('span');a.textContent='ไม่มีคนในทีม';li.appendChild(a);ol.appendChild(li)}
+      const sm=document.createElement('small');sm.textContent='คะแนนทีมคือค่าเฉลี่ย รวมทั้งเกม '+G.scores[t]+' คะแนน';
+      d.append(hd,tr,ol,sm);gb.appendChild(d);
+    }
     const nRight=Object.values(Q.answers).filter(a=>a.right).length;
     if(nRight){confetti(Math.min(220,60+nRight*8));beep(659,.12);beep(880,.12,.12);beep(1319,.25,.24)}else{beep(330,.25);beep(262,.4,.22)}
     $('tonext').focus();
@@ -3177,7 +3236,10 @@ function runHost(){
   const lastReact={};let floaters=0;
   function showReact(pid,e){
     const now=Date.now(),em=REACTS[e];if(!em||now-(lastReact[pid]||0)<450||floaters>=60)return;lastReact[pid]=now;floaters++;
-    const p=G.players[pid],d=document.createElement('div');d.className='fl';d.style.left=(4+Math.random()*88)+'%';
+    const p=G.players[pid],d=document.createElement('div');d.className='fl';
+    const qr=$('qrcard1').getBoundingClientRect();
+    if(G.phase==='lobby'&&innerWidth>900&&qr.width){const x0=qr.right+30,x1=innerWidth-80;d.style.left=(x0+Math.random()*Math.max(0,x1-x0))+'px'}
+    else d.style.left=(4+Math.random()*88)+'%';
     d.style.setProperty('--d',(2.6+Math.random()*1.4)+'s');d.style.setProperty('--s',(40+Math.random()*30)+'px');
     const s=document.createElement('span');s.className='em';s.textContent=em;const n=document.createElement('small');n.textContent=p?p.name:'';
     d.append(s,n);$('fx').appendChild(d);setTimeout(()=>{d.remove();floaters--},4300);
@@ -3351,6 +3413,9 @@ function runPlayer(){
       msg(`${head}${right&&r.streak>=2?`<div class="streak">🔥 ถูกติดกัน ${r.streak} ข้อ</div>`:''}<div class="ptag">เฉลย ${shape(r.correct)}<span></span></div><p>${esc(team.name)} ได้ +${r.gain} คะแนนข้อนี้ อยู่อันดับ ${s.me.rank}</p>`,r.mine==null?'':right?'ok':'bad');
       if(right)confetti(90);
       $('p-msg').querySelector('.ptag span').textContent=s.q.texts[r.correct];
+      if(r.mates&&r.mates.length){const box=document.createElement('div');box.className='tlist';const h=document.createElement('p');h.textContent='คะแนนในทีมคุณข้อนี้';const ol=document.createElement('ol');
+        r.mates.forEach(m=>{const li=document.createElement('li');li.className=m.st+(m.me?' me':'');const a=document.createElement('span');a.textContent=m.n+(m.me?' (คุณ)':'');const b=document.createElement('b');b.textContent=m.st==='r'?'+'+m.pts:m.st==='w'?'ผิด 0':'ไม่ได้ตอบ';li.append(a,b);ol.appendChild(li)});
+        box.append(h,ol);$('p-msg').appendChild(box)}
       try{navigator.vibrate&&navigator.vibrate(right?[60,60,60]:200)}catch(e){}
       return}
     if(s.phase==='end'){msg(`<p>จบเกม</p><h1><span class="hl" style="--c:${esc(team.color)}">${esc(team.name)}</span></h1><div class="bigico">อันดับ ${s.me.rank}</div><p>ทีมได้ ${team.score} คะแนน · คุณทำได้ ${s.me.score} คะแนน</p>`);return}
