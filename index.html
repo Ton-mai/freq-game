@@ -314,6 +314,20 @@ h1,h2,h3{margin:0;font-weight:600}
 .qwrap.res .ans p{font-size:16px}
 .qwrap.res .gainbox{padding:10px 14px}
 .gainbox .tgrid{margin-top:8px}
+/* two-step result: reveal, then scores */
+.revbar{display:flex;justify-content:flex-end}
+.qwrap.sc .qcard,.qwrap.sc .hch,.qwrap.sc .ans,.qwrap.sc .revbar{display:none}
+.qwrap.sc{max-width:1320px}
+.qwrap.sc .gainbox{background:transparent;border:0;padding:0;gap:14px}
+.qwrap.sc .resfoot h2{font:400 clamp(36px,3.8vw,54px)/1.1 var(--mark);color:var(--ink)}
+.qwrap.sc .tgrid{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-top:14px}
+.qwrap.sc .tpanel{padding:16px 18px;border-width:3px;border-top-width:10px;box-shadow:6px 6px 0 var(--ink);gap:8px}
+.qwrap.sc .tpn{font-size:22px}
+.qwrap.sc .tph .gv{font-size:44px}
+.qwrap.sc .tpanel .strack{height:18px}
+.qwrap.sc .tpm{font-size:18px;gap:3px}
+.qwrap.sc .tpanel small{font-size:14px}
+.pv .sub2{font:600 20px/1.3 var(--ui);color:var(--ink)}
 /* phone: teammates list */
 .tlist{background:rgba(255,255,255,.96);color:var(--ink);border:2px solid var(--ink);border-radius:14px;padding:10px 14px;text-align:left;max-width:380px;width:100%;margin:0 auto}
 .tlist p{color:var(--soft)!important;font-size:14px!important;margin:0 0 4px!important}
@@ -414,8 +428,9 @@ h1,h2,h3{margin:0;font-weight:600}
       <div class="acts"><button class="rv" id="endnow">จบเวลา เฉลยเลย</button></div>
     </div>
     <div class="ans" id="ans" hidden><span class="tagq">เฉลย</span><div><b id="atext"></b><p id="aexp"></p></div></div>
+    <div class="revbar" id="revbar" hidden><button class="go big" id="toscores">ดูคะแนน</button></div>
     <div id="resblock" class="gainbox" hidden>
-      <div class="resfoot"><h2>คะแนนข้อนี้ของแต่ละทีมและแต่ละคน</h2><button class="go big" id="tonext">กลับไปที่กระดาน</button></div>
+      <div class="resfoot"><h2>คะแนนข้อนี้</h2><button class="go big" id="tonext">กลับไปที่กระดาน</button></div>
       <div id="gains" class="tgrid"></div>
     </div>
   </div>
@@ -2985,12 +3000,12 @@ function runHost(){
     const p=G.players[pid];
     const m={t:'st',phase:G.phase,code:G.code,teams:teamsInfo(),turn:curTeam(),canTeam:!p||p.team==null||G.phase==='lobby',
       me:p?{name:p.name,team:p.team,score:p.score,rank:p.team!=null?rankOf(p.team):null}:null};
-    if(Q&&['read','answer','result'].includes(G.phase)){
+    if(Q&&['read','answer','result','scores'].includes(G.phase)){
       const now=performance.now();
       m.q={k:Q.k,cat:Q.cat,pts:Q.p,picker:Q.team,texts:Q.texts};
       if(G.phase==='read'){m.q.remain=Math.max(0,Q.readEnd-now);m.q.total=G.read*1000}
       if(G.phase==='answer'){m.q.remain=Math.max(0,Q.end-now);m.q.total=G.secs*1000;const a=Q.answers[pid];m.q.mine=a?a.c:null}
-      if(G.phase==='result'){const a=Q.answers[pid];m.res={correct:Q.correct,mine:a?a.c:null,pts:a?a.pts:0,gain:p&&p.team!=null?Q.gains[p.team]:0,streak:p?p.streak||0:0,mates:p&&p.team!=null&&Q.members?(Q.members[p.team]||[]).slice(0,20).map(m=>({n:m.n,pts:m.pts,st:m.st,me:m.id===pid})):[]}}
+      if(G.phase==='result'||G.phase==='scores'){const a=Q.answers[pid];m.res={correct:Q.correct,mine:a?a.c:null,pts:a?a.pts:0,gain:p&&p.team!=null?Q.gains[p.team]:0,streak:p?p.streak||0:0,mates:p&&p.team!=null&&Q.members?(Q.members[p.team]||[]).slice(0,20).map(m=>({n:m.n,pts:m.pts,st:m.st,me:m.id===pid})):[]}}
     }
     return m;
   }
@@ -3123,7 +3138,7 @@ function runHost(){
     if(q.f){const l=document.createElement('p');l.className='flabel';l.textContent='ข้อมูลที่โจทย์ให้';const d=document.createElement('div');d.className='facts';q.f.forEach(x=>{const s=document.createElement('span');s.textContent=x;d.appendChild(s)});fx.append(l,d)}
     $('qtable').innerHTML=q.t?tableHTML(q.t):'';$('qtable').hidden=!q.t;
     $('atext').textContent=q.c[0];$('aexp').textContent=q.e;
-    $('intro').hidden=false;$('qmain').hidden=true;$('qmain').classList.remove('res');
+    $('intro').hidden=false;$('qmain').hidden=true;$('qmain').classList.remove('res','sc');
     const bar=$('ibar');bar.style.animation='none';void bar.offsetWidth;bar.style.animation=`drain ${G.read}s linear forwards`;
     clearInterval(tick);tick=setInterval(()=>{const left=Math.ceil((Q.readEnd-performance.now())/1000);if(left>0)$('icount').textContent=left},200);
     $('icount').textContent=G.read;
@@ -3154,7 +3169,7 @@ function runHost(){
     const now=performance.now();Q.start=now;Q.end=now+G.secs*1000;
     Q.eligible=onlineIds().filter(id=>G.players[id].team!=null);
     $('intro').hidden=true;const w=$('qmain');w.hidden=false;w.classList.remove('enter');void w.offsetWidth;w.classList.add('enter');w.focus();
-    $('qbar').hidden=false;$('ans').hidden=true;$('resblock').hidden=true;$('timer').classList.remove('up','hurry');lastSec=0;
+    $('qbar').hidden=false;$('ans').hidden=true;$('resblock').hidden=true;$('revbar').hidden=true;$('timer').classList.remove('up','hurry');lastSec=0;
     drawChoices(false);drawCount();
     try{if(AC){endOsc=beep(660,0.7,G.secs)}}catch(e){}
     tick=setInterval(()=>{
@@ -3200,15 +3215,14 @@ function runHost(){
     if(G.turn===G.order.indexOf(Q.team))G.turn=(G.turn+1)%G.nT;
     G.phase='result';G.started=true;
     drawChoices(true);
-    $('qbar').hidden=true;$('ans').hidden=false;$('resblock').hidden=false;
-    $('qmain').classList.add('res');
+    $('qbar').hidden=true;$('ans').hidden=false;$('resblock').hidden=true;$('revbar').hidden=false;
     const gb=$('gains');gb.innerHTML='';
     for(let t=0;t<G.nT;t++){
       const d=document.createElement('div');d.className='tpanel';d.style.setProperty('--c',TCOL[t]);
       const hd=document.createElement('div');hd.className='tph';const nm=document.createElement('span');nm.className='tpn';nm.textContent=G.names[t];
       const gv=document.createElement('b');gv.className='gv';gv.textContent='+'+Q.gains[t];hd.append(nm,gv);
       const tr=document.createElement('div');tr.className='strack';const bar=document.createElement('i');bar.style.width='0%';tr.appendChild(bar);
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.width=(Q.gains[t]/Q.p*100)+'%'}));
+      bar.dataset.w=(Q.gains[t]/Q.p*100)+'%';
       const ol=document.createElement('ol');ol.className='tpm';const MAXM=10,ms=Q.members[t]||[];
       ms.slice(0,MAXM).forEach(m=>{const li=document.createElement('li');li.className=m.st;const a=document.createElement('span');a.textContent=m.n;const b=document.createElement('b');b.textContent=m.st==='r'?'+'+m.pts:m.st==='w'?'ผิด 0':'ไม่ได้ตอบ';li.append(a,b);ol.appendChild(li)});
       if(ms.length>MAXM){const li=document.createElement('li');li.className='n';const a=document.createElement('span');a.textContent='อีก '+(ms.length-MAXM)+' คน';li.appendChild(a);ol.appendChild(li)}
@@ -3218,7 +3232,15 @@ function runHost(){
     }
     const nRight=Object.values(Q.answers).filter(a=>a.right).length;
     if(nRight){confetti(Math.min(220,60+nRight*8));beep(659,.12);beep(880,.12,.12);beep(1319,.25,.24)}else{beep(330,.25);beep(262,.4,.22)}
-    $('tonext').focus();
+    $('toscores').focus();
+    save();sync();
+  }
+  function goScores(){
+    if(!Q||G.phase!=='result')return;
+    G.phase='scores';
+    $('qmain').classList.add('sc');$('revbar').hidden=true;$('resblock').hidden=false;
+    $('gains').querySelectorAll('.strack i').forEach(b=>{const w=b.dataset.w;b.style.width='0%';requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.width=w}))});
+    $('qmain').scrollTop=0;$('q').scrollTop=0;$('tonext').focus();beep(784,.12);
     save();sync();
   }
   function closeQ(){
@@ -3251,12 +3273,14 @@ function runHost(){
   $('intro').addEventListener('click',goAnswer);
   $('endnow').addEventListener('click',finishAnswer);
   $('tonext').addEventListener('click',closeQ);
+  $('toscores').addEventListener('click',goScores);
   document.addEventListener('keydown',e=>{
     if($('qrm').classList.contains('open')){if(e.key==='Escape'){e.preventDefault();$('qrm').classList.remove('open')}return}
     if(!Q)return;
     if(G.phase==='read'){if(e.key===' '||e.key==='Enter'){e.preventDefault();if(!e.repeat)goAnswer()}else if(e.key==='Escape'){e.preventDefault();cancelQ()}}
     else if(G.phase==='answer'){if(e.key==='Enter'){e.preventDefault();if(!e.repeat)finishAnswer()}}
-    else if(G.phase==='result'){if((e.key===' '||e.key==='Enter')&&e.target.id!=='tonext'){e.preventDefault();if(!e.repeat)closeQ()}}
+    else if(G.phase==='result'){if((e.key===' '||e.key==='Enter')&&e.target.id!=='toscores'){e.preventDefault();if(!e.repeat)goScores()}}
+    else if(G.phase==='scores'){if((e.key===' '||e.key==='Enter')&&e.target.id!=='tonext'){e.preventDefault();if(!e.repeat)closeQ()}}
   });
   $('order').addEventListener('click',e=>{const b=e.target.closest('.oc');if(b){G.turn=+b.dataset.pos;save();drawTurns();drawTeams();sync()}});
   $('shuffle').addEventListener('click',()=>{
@@ -3385,7 +3409,7 @@ function runPlayer(){
     const sameQ=key===lastKey;lastKey=key;
     if(pend&&(!s.q||pend.k!==s.q.k))pend=null;
     if(!s.canTeam)picking=false;
-    $('rbar').hidden=!(s.me&&my!=null&&!picking&&['lobby','board','result','end'].includes(s.phase));
+    $('rbar').hidden=!(s.me&&my!=null&&!picking&&['lobby','board','result','scores','end'].includes(s.phase));
     if(!s.me||my==null||picking){stopTimer();return teamPicker()}
     if(s.phase==='lobby'){stopTimer();
       msg(`<p>คุณอยู่</p><h1><span class="hl" style="--c:${esc(team.color)}">${esc(team.name)}</span></h1><p>ทีมนี้มี ${team.count} คน · รอครูเริ่มเกม</p>`);
@@ -3410,13 +3434,17 @@ function runPlayer(){
     if(s.phase==='result'){
       const r=s.res,right=r.mine===r.correct;
       const head=r.mine==null?'<h1>ไม่ทันตอบ</h1>':right?`<h1>ถูก!</h1><div class="bigico">+${r.pts}</div>`:'<h1>ยังไม่ถูก</h1>';
-      msg(`${head}${right&&r.streak>=2?`<div class="streak">🔥 ถูกติดกัน ${r.streak} ข้อ</div>`:''}<div class="ptag">เฉลย ${shape(r.correct)}<span></span></div><p>${esc(team.name)} ได้ +${r.gain} คะแนนข้อนี้ อยู่อันดับ ${s.me.rank}</p>`,r.mine==null?'':right?'ok':'bad');
+      msg(`${head}${right&&r.streak>=2?`<div class="streak">🔥 ถูกติดกัน ${r.streak} ข้อ</div>`:''}<div class="ptag">เฉลย ${shape(r.correct)}<span></span></div><p>เดี๋ยวคะแนนของทีมจะขึ้นบนจอใหญ่</p>`,r.mine==null?'':right?'ok':'bad');
       if(right)confetti(90);
       $('p-msg').querySelector('.ptag span').textContent=s.q.texts[r.correct];
+      try{navigator.vibrate&&navigator.vibrate(right?[60,60,60]:200)}catch(e){}
+      return}
+    if(s.phase==='scores'){
+      const r=s.res;
+      msg(`<p>คะแนนข้อนี้</p><h1><span class="hl" style="--c:${esc(team.color)}">${esc(team.name)} +${r.gain}</span></h1><p class="sub2">ทีมคุณอยู่อันดับ ${s.me.rank} รวม ${team.score} คะแนน</p>`);
       if(r.mates&&r.mates.length){const box=document.createElement('div');box.className='tlist';const h=document.createElement('p');h.textContent='คะแนนในทีมคุณข้อนี้';const ol=document.createElement('ol');
         r.mates.forEach(m=>{const li=document.createElement('li');li.className=m.st+(m.me?' me':'');const a=document.createElement('span');a.textContent=m.n+(m.me?' (คุณ)':'');const b=document.createElement('b');b.textContent=m.st==='r'?'+'+m.pts:m.st==='w'?'ผิด 0':'ไม่ได้ตอบ';li.append(a,b);ol.appendChild(li)});
         box.append(h,ol);$('p-msg').appendChild(box)}
-      try{navigator.vibrate&&navigator.vibrate(right?[60,60,60]:200)}catch(e){}
       return}
     if(s.phase==='end'){msg(`<p>จบเกม</p><h1><span class="hl" style="--c:${esc(team.color)}">${esc(team.name)}</span></h1><div class="bigico">อันดับ ${s.me.rank}</div><p>ทีมได้ ${team.score} คะแนน · คุณทำได้ ${s.me.score} คะแนน</p>`);return}
   }
